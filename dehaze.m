@@ -18,7 +18,7 @@ if nargin == 1
     patch_size = 15; % Percentage of brightest pixels to select from
 end
 
-I_dark = dark_channel(I, patch_size);
+I_dark = dark_channel_van_herk(I, patch_size);
 I_atmos = atmospheric_light(I, I_dark, percentage);
 I_trans = transmission(I, I_atmos, patch_size, w);
 J = radiance(I, I_atmos, I_trans, t0);
