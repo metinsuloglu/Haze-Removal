@@ -13,7 +13,9 @@ end
 dc = zeros(M, N);
 
 patch_radius = floor(patch_size/2);
-padded = padarray(I, [patch_radius patch_radius], Inf);
+padded = [Inf(patch_radius, N + 2*patch_radius, 3);...
+    Inf(M, patch_radius, 3) I Inf(M, patch_radius, 3);...
+    Inf(patch_radius, N + 2*patch_radius, 3)];
 
 for i = 1:M
     for j = 1:N
