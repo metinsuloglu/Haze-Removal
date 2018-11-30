@@ -22,7 +22,7 @@ function varargout = remove_haze(varargin)
 
 % Edit the above text to modify the response to help remove_haze
 
-% Last Modified by GUIDE v2.5 30-Nov-2018 15:11:29
+% Last Modified by GUIDE v2.5 30-Nov-2018 17:03:15
 %
 % GUI created by Metin Suloglu, 2018
 % Bahcesehir University
@@ -572,6 +572,15 @@ function dcWindowSizeTF_Callback(~, ~, ~)
 
 % Hints: get(hObject,'String') returns contents of dcWindowSizeTF as text
 %        str2double(get(hObject,'String')) returns contents of dcWindowSizeTF as a double
+
+
+% --- Executes on button press in vanHerkCB.
+function vanHerkCB_Callback(hObject, eventdata, handles)
+% hObject    handle to vanHerkCB (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of vanHerkCB
 
 
 function percTF_Callback(~, ~, ~)
