@@ -15,21 +15,21 @@ if nargin < 3
     percentage = 0.001; % Percentage of brightest pixels to select from
 end
 if nargin == 1
-    patch_size = 15; % Percentage of brightest pixels to select from
+    patch_size = 15; % Window size
 end
 
 % Guided filter parameters
-r = 20;
-epsilon = 1e-3;
+%r = 20;
+%epsilon = 1e-3;
 
 % Soft matting parameter
-%lambda = 1e-4;
+lambda = 1e-4;
 
 I_dark = dark_channel_van_herk(I, patch_size);
 I_atmos = atmospheric_light(I, I_dark, percentage);
 I_trans_tilde = transmission(I, I_atmos, patch_size, w);
-%I_trans = refine_transmission(I, I_trans_tilde, lambda);
-I_trans = guided_filter(rgb2gray(I), I_trans_tilde, r, epsilon);
+I_trans = refine_transmission(I, I_trans_tilde, lambda);
+%I_trans = guided_filter(rgb2gray(I), I_trans_tilde, r, epsilon);
 J = radiance(I, I_atmos, I_trans, t0);
 
 end

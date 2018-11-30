@@ -9,6 +9,10 @@ function [dc, rgb_dc] = dark_channel_van_herk(I, k)
 offset = (k - 1);
 
 rgb_dc = min(I, [], 3);
+if k == 1
+    dc = rgb_dc;
+    return;
+end
 
 % Extend columns to be a multiple of k
 extended = [rgb_dc Inf(M_orig, k - mod(N_orig, k))];
