@@ -22,7 +22,7 @@ function varargout = remove_haze(varargin)
 
 % Edit the above text to modify the response to help remove_haze
 
-% Last Modified by GUIDE v2.5 30-Nov-2018 17:03:15
+% Last Modified by GUIDE v2.5 08-Dec-2018 17:49:49
 %
 % GUI created by Metin Suloglu, 2018
 % Bahcesehir University
@@ -105,6 +105,7 @@ if ~isequal(file, 0) && ~isequal(path, 0)
     axes(handles.orig_im);
     im = imshow(handles.I);
     im.ButtonDownFcn = @orig_im_ButtonDownFcn;
+    drawnow
     set(handles.dcXButton, 'Enable', 'on');
     set(handles.heXButton, 'Enable', 'on');
     set(handles.dcButton1, 'Enable', 'on');
@@ -337,6 +338,9 @@ function handles = resetRefinedTransColours(handles)
 handles.tPanel.BackgroundColor = 'w';
 handles.tSettingPanel.BackgroundColor = 'w';
 handles.tLambdaLabel.BackgroundColor = 'w';
+handles.gfSettingPanel.BackgroundColor = 'w';
+handles.tRadiusLabel.BackgroundColor = 'w';
+handles.tRegularizationLabel.BackgroundColor = 'w';
 
 
 % --- Calculates dark channel of the image stored in handles.
@@ -361,6 +365,7 @@ cla(handles.dc_im);
 axes(handles.dc_im);
 im = imshow(handles.dc);
 im.ButtonDownFcn = @dc_im_ButtonDownFcn;
+drawnow
 handles.step = 1;
 
 
@@ -382,6 +387,7 @@ cla(handles.airlight_im);
 axes(handles.airlight_im);
 im = imshow(repmat(reshape(handles.A, 1, 1, 3), [100, 100]));
 im.ButtonDownFcn = @airlight_im_ButtonDownFcn;
+drawnow
 handles.step = 2;
 
 
@@ -407,25 +413,46 @@ cla(handles.ttilde_im);
 axes(handles.ttilde_im);
 im = imshow(handles.t_tilde);
 im.ButtonDownFcn = @ttilde_im_ButtonDownFcn;
+drawnow
 handles.step = 3;
 
 
 % --- Soft matting step.
 % Also updates color of panel to green and displays the refined transmission map.
 function handles = refineTrans(handles)
-lambda = str2double(get(handles.lambdaTF, 'String'));
-if isnan(lambda)
-    lambda = 1e-4;
-    warning('Invalid soft matting parameter: Using 1e-4.');
+use_guided_filter = get(handles.gfRefineButton, 'Value');
+if ~use_guided_filter
+    lambda = str2double(get(handles.lambdaTF, 'String'));
+    if isnan(lambda)
+        lambda = 1e-4;
+        warning('Invalid soft matting parameter: Using 1e-4.');
+    end
+    handles.trans = refine_transmission(handles.I, handles.t_tilde, lambda);
+else
+    radius = str2double(get(handles.tRadiusTF, 'String'));
+    if isnan(radius)
+        radius = 20;
+        warning('Invalid guided filter parameter r: Using 20.');
+    end
+    epsilon = str2double(get(handles.tEpsilonTF, 'String'));
+    if isnan(epsilon)
+        epsilon = 1e-3;
+        warning('Invalid guided filter parameter epsilon: Using 1e-3.');
+    end
+    handles.trans = guided_filter(rgb2gray(handles.I), handles.t_tilde,...
+        radius, epsilon);
 end
-handles.trans = refine_transmission(handles.I, handles.t_tilde, lambda);
 handles.tPanel.BackgroundColor = [0.8 1 0.8];
 handles.tSettingPanel.BackgroundColor = [0.8 1 0.8];
 handles.tLambdaLabel.BackgroundColor = [0.8 1 0.8];
+handles.gfSettingPanel.BackgroundColor = [0.8 1 0.8];
+handles.tRadiusLabel.BackgroundColor = [0.8 1 0.8];
+handles.tRegularizationLabel.BackgroundColor = [0.8 1 0.8];
 cla(handles.t_im);
 axes(handles.t_im);
 im = imshow(handles.trans);
 im.ButtonDownFcn = @t_im_ButtonDownFcn;
+drawnow
 handles.step = 4;
 
 
@@ -442,6 +469,7 @@ cla(handles.clear_im);
 axes(handles.clear_im);
 im = imshow(handles.radiance);
 im.ButtonDownFcn = @clear_im_ButtonDownFcn;
+drawnow
 set(handles.saveImageButton, 'Enable', 'on');
 handles.step = 5;
 
@@ -462,11 +490,12 @@ cla(handles.he_im);
 axes(handles.he_im);
 im = imshow(handles.hequalized);
 im.ButtonDownFcn = @he_im_ButtonDownFcn;
+drawnow
 handles.heMainPanel.BackgroundColor = [0.8 1 0.8];
 handles.clipLimitLabel.BackgroundColor = [0.8 1 0.8];
 handles.heSlider0.BackgroundColor = [0.8 1 0.8];
 handles.heSlider1.BackgroundColor = [0.8 1 0.8];
-pause(0.1);
+pause(.1);
 handles.heMainPanel.BackgroundColor = 'w';
 handles.clipLimitLabel.BackgroundColor = 'w';
 handles.heSlider0.BackgroundColor = 'w';
@@ -540,6 +569,32 @@ end
 
 
 % --- Executes during object creation, after setting all properties.
+function tRadiusTF_CreateFcn(hObject, ~, ~)
+% hObject    handle to tRadiusTF (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+% --- Executes during object creation, after setting all properties.
+function tEpsilonTF_CreateFcn(hObject, ~, ~)
+% hObject    handle to tEpsilonTF (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+% --- Executes during object creation, after setting all properties.
 function t0TF_CreateFcn(hObject, ~, ~)
 % hObject    handle to t0TF (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
@@ -562,6 +617,28 @@ function heClipSlider_CreateFcn(hObject, ~, ~)
 if isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor',[.9 .9 .9]);
 end
+
+
+% --- Executes on button press in mlRefineButton.
+function mlRefineButton_Callback(~, ~, handles)
+% hObject    handle to mlRefineButton (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of mlRefineButton
+set(handles.tSettingPanel, 'Visible', 'on');
+set(handles.gfSettingPanel, 'Visible', 'off');
+
+
+% --- Executes on button press in gfRefineButton.
+function gfRefineButton_Callback(~, ~, handles)
+% hObject    handle to gfRefineButton (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of gfRefineButton
+set(handles.gfSettingPanel, 'Visible', 'on');
+set(handles.tSettingPanel, 'Visible', 'off');
 
 
 
@@ -617,6 +694,24 @@ function lambdaTF_Callback(~, ~, ~)
 
 % Hints: get(hObject,'String') returns contents of lambdaTF as text
 %        str2double(get(hObject,'String')) returns contents of lambdaTF as a double
+
+
+function tRadiusTF_Callback(~, ~, ~)
+% hObject    handle to tRadiusTF (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of tRadiusTF as text
+%        str2double(get(hObject,'String')) returns contents of tRadiusTF as a double
+
+
+function tEpsilonTF_Callback(~, ~, ~)
+% hObject    handle to tEpsilonTF (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of tEpsilonTF as text
+%        str2double(get(hObject,'String')) returns contents of tEpsilonTF as a double
 
 
 function t0TF_Callback(~, ~, ~)
